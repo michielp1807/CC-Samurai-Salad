@@ -440,10 +440,10 @@ end
 local bomb = loadFruit("models/bomb.stab", 0.3, 1, true)
 
 local fruits = {
-    loadFruit("models/apple.stab", 0.2, 2),
-    loadFruit("models/coconut.stab", 0.3, 1),
-    loadFruit("models/pineapple.stab", 0.4, 0.7),
-    loadFruit("models/watermelon.stab", 0.4, 0.5)
+    loadFruit("models/apple.stab", 0.25, 2),
+    loadFruit("models/coconut.stab", 0.33, 1),
+    loadFruit("models/pineapple.stab", 0.45, 0.7),
+    loadFruit("models/watermelon.stab", 0.45, 0.5)
 }
 
 ---Create a new target fruit at a random location
@@ -644,6 +644,20 @@ local function userInput()
     end
 end
 
+local large = math.pow(10, 99)
+local function linear(x1, y1, x2, y2) -- Copied from Pine3D
+    local dx = x2 - x1
+    if dx == 0 then
+        return large, -large * x1
+    end
+    local a = (y2 - y1) / dx
+    return a, y1 - a * x1
+end
+local function drawLine(buffer, x1, y1, x2, y2, color)
+    local a, b = linear(x1, y1, x2, y2)
+    buffer:loadLineBLittle(x1, y1, x2, y2, color, a, b)
+end
+
 local function gameLoop()
     local lastTime = os.epoch("utc")
 
@@ -690,37 +704,13 @@ local function gameLoop()
             return
         end
 
-        -- use a fake event to yield the coroutine
-        os.queueEvent("gameLoop")
-        ---@diagnostic disable-next-line: param-type-mismatch
-        os.pullEventRaw("gameLoop")
-    end
-end
-
-
-local large = math.pow(10, 99)
-local function linear(x1, y1, x2, y2) -- Copied from Pine3D
-    local dx = x2 - x1
-    if dx == 0 then
-        return large, -large * x1
-    end
-    local a = (y2 - y1) / dx
-    return a, y1 - a * x1
-end
-local function drawLine(buffer, x1, y1, x2, y2, color)
-    local a, b = linear(x1, y1, x2, y2)
-    buffer:loadLineBLittle(x1, y1, x2, y2, color, a, b)
-end
-
-local function rendering()
-    while true do
+        -- Render frame
         local camera = frame.camera
         local cameraAngles = {
             sin(camera[4] or 0), cos(camera[4] or 0),
             sin(-camera[5]), cos(-camera[5]),
             sin(camera[6]), cos(camera[6]),
         }
-
         frame:drawObject(backgroundObj, camera, cameraAngles)
 
         -- Draw particles
@@ -737,19 +727,19 @@ local function rendering()
         local buffer = frame.buffer
 
         -- Draw circle (for debugging)
-        -- local hr2 = sqrt(2) * 0.5
-        -- local c = colors.black
-        -- for i = #targets, 1, -1 do
-        --     local target = targets[i]
-        --     if target then
-        --         drawLine(buffer, target.scrX - target.r, target.scrY, target.scrX + target.r, target.scrY, c)
-        --         drawLine(buffer, target.scrX, target.scrY - target.r, target.scrX, target.scrY + target.r, c)
-        --         drawLine(buffer, target.scrX - target.r * hr2, target.scrY - target.r * hr2,
-        --             target.scrX + target.r * hr2, target.scrY + target.r * hr2, c)
-        --         drawLine(buffer, target.scrX - target.r * hr2, target.scrY + target.r * hr2,
-        --             target.scrX + target.r * hr2, target.scrY - target.r * hr2, c)
-        --     end
-        -- end
+        local hr2 = sqrt(2) * 0.5
+        local c = colors.black
+        for i = #targets, 1, -1 do
+            local target = targets[i]
+            if target then
+                drawLine(buffer, target.scrX - target.r, target.scrY, target.scrX + target.r, target.scrY, c)
+                drawLine(buffer, target.scrX, target.scrY - target.r, target.scrX, target.scrY + target.r, c)
+                drawLine(buffer, target.scrX - target.r * hr2, target.scrY - target.r * hr2,
+                    target.scrX + target.r * hr2, target.scrY + target.r * hr2, c)
+                drawLine(buffer, target.scrX - target.r * hr2, target.scrY + target.r * hr2,
+                    target.scrX + target.r * hr2, target.scrY - target.r * hr2, c)
+            end
+        end
 
         -- Draw slices
         local currentTime = os.epoch("utc")
@@ -762,7 +752,8 @@ local function rendering()
         end
         if tempSliceSegment and tempSliceSegment.created > onlyDrawIfCreatedAfter then
             -- Draw temporary slice at the end
-            drawLine(buffer, tempSliceSegment[1], tempSliceSegment[2] - 1, tempSliceSegment[3], tempSliceSegment[4] - 1,
+            drawLine(buffer, tempSliceSegment[1], tempSliceSegment[2] - 1, tempSliceSegment[3],
+                tempSliceSegment[4] - 1,
                 colors.white)
         end
 
@@ -782,10 +773,11 @@ local function rendering()
 
         frame:drawBuffer()
 
-        os.queueEvent("FakeEvent")
+        -- use a fake event to yield the coroutine
+        os.queueEvent("gameLoop")
         ---@diagnostic disable-next-line: param-type-mismatch
-        os.pullEvent("FakeEvent")
+        os.pullEventRaw("gameLoop")
     end
 end
 
-parallel.waitForAny(userInput, gameLoop, rendering)
+parallel.waitForAny(userInput, gameLoop)
