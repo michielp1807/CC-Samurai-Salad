@@ -727,19 +727,19 @@ local function gameLoop()
         local buffer = frame.buffer
 
         -- Draw circle (for debugging)
-        local hr2 = sqrt(2) * 0.5
-        local c = colors.black
-        for i = #targets, 1, -1 do
-            local target = targets[i]
-            if target then
-                drawLine(buffer, target.scrX - target.r, target.scrY, target.scrX + target.r, target.scrY, c)
-                drawLine(buffer, target.scrX, target.scrY - target.r, target.scrX, target.scrY + target.r, c)
-                drawLine(buffer, target.scrX - target.r * hr2, target.scrY - target.r * hr2,
-                    target.scrX + target.r * hr2, target.scrY + target.r * hr2, c)
-                drawLine(buffer, target.scrX - target.r * hr2, target.scrY + target.r * hr2,
-                    target.scrX + target.r * hr2, target.scrY - target.r * hr2, c)
-            end
-        end
+        -- local hr2 = sqrt(2) * 0.5
+        -- local c = colors.black
+        -- for i = #targets, 1, -1 do
+        --     local target = targets[i]
+        --     if target then
+        --         drawLine(buffer, target.scrX - target.r, target.scrY, target.scrX + target.r, target.scrY, c)
+        --         drawLine(buffer, target.scrX, target.scrY - target.r, target.scrX, target.scrY + target.r, c)
+        --         drawLine(buffer, target.scrX - target.r * hr2, target.scrY - target.r * hr2,
+        --             target.scrX + target.r * hr2, target.scrY + target.r * hr2, c)
+        --         drawLine(buffer, target.scrX - target.r * hr2, target.scrY + target.r * hr2,
+        --             target.scrX + target.r * hr2, target.scrY - target.r * hr2, c)
+        --     end
+        -- end
 
         -- Draw slices
         local currentTime = os.epoch("utc")
